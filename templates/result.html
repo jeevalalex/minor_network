@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Analysis Result - PhishGuard Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0e27;
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 60px;
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .result-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 60px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-section::before {
+            content: '';
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.15), transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
+        }
+
+        .result-container {
+            max-width: 900px;
+            width: 100%;
+            z-index: 1;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-icon {
+            font-size: 120px;
+            text-align: center;
+            margin-bottom: 30px;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 60px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+        }
+
+        .status-safe {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 2px solid #34d399;
+        }
+
+        .status-phishing {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 2px solid #f87171;
+        }
+
+        .status-error {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 2px solid #fbbf24;
+        }
+
+        .result-title {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .result-message {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 50px;
+            line-height: 1.6;
+        }
+
+        .url-display {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: left;
+        }
+
+        .url-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .url-text {
+            font-size: 16px;
+            color: white;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin: 40px 0;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .recommendations {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid #667eea;
+            padding: 30px;
+            border-radius: 16px;
+            margin-top: 40px;
+            text-align: left;
+        }
+
+        .recommendations h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: white;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            padding: 12px 0;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            line-height: 1.6;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .recommendations li::before {
+            content: "✓";
+            color: #34d399;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        @media (max-width: 1024px) {
+            .result-section {
+                padding: 100px 30px 40px;
+            }
+
+            .result-card {
+                padding: 40px 30px;
+            }
+
+            .navbar {
+                padding: 20px 30px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .result-title {
+                font-size: 32px;
+            }
+
+            .status-icon {
+                font-size: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo-container">
+            <span class="logo-icon">🛡️</span>
+            <span class="logo-text">PhishGuard Pro</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="#">Features</a></li>
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">API</a></li>
+        </ul>
+    </nav>
+
+    <section class="result-section">
+        <div class="result-container">
+            <div class="status-icon">
+                {% if error %}⚠️{% elif 'Phishing' in result or 'phishing' in result %}🚨{% else %}✅{% endif %}
+            </div>
+
+            <div class="result-card">
+                <div class="status-badge {% if error %}status-error{% elif 'Phishing' in result or 'phishing' in result %}status-phishing{% else %}status-safe{% endif %}">
+                    {% if error %}Error Detected{% elif 'Phishing' in result or 'phishing' in result %}Threat Detected{% else %}Safe URL{% endif %}
+                </div>
+
+                <h1 class="result-title">{{ result }}</h1>
+                
+                <p class="result-message">
+                    {% if error %}
+                    We encountered an issue while analyzing this URL. Please verify the URL format and try again.
+                    {% elif 'Phishing' in result or 'phishing' in result %}
+                    Our AI has detected suspicious patterns indicating this website may be a phishing attempt. Exercise extreme caution.
+                    {% else %}
+                    This URL appears to be legitimate based on our comprehensive security analysis. However, always stay vigilant online.
+                    {% endif %}
+                </p>
+
+                <div class="url-display">
+                    <div class="url-label">🔗 Analyzed URL</div>
+                    <div class="url-text">{{ url }}</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-icon">🤖</div>
+                        <div class="info-label">Analysis Method</div>
+                        <div class="info-value">Machine Learning</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">⚡</div>
+                        <div class="info-label">Scan Time</div>
+                        <div class="info-value">&lt; 100ms</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">🔒</div>
+                        <div class="info-label">Privacy</div>
+                        <div class="info-value">Not Stored</div>
+                    </div>
+                </div>
+
+                {% if 'Phishing' in result or 'phishing' in result %}
+                <div class="recommendations">
+                    <h3>🛡️ Security Recommendations</h3>
+                    <ul>
+                        <li>Do not enter any personal information on this website</li>
+                        <li>Do not click on links or download files from this site</li>
+                        <li>Report this URL to your IT security team or local authorities</li>
+                        <li>Clear your browser cache and run a security scan</li>
+                        <li>Enable two-factor authentication on all your accounts</li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="recommendations">
+                    <h3>💡 Best Practices</h3>
+                    <ul>
+                        <li>Always verify the URL before entering sensitive information</li>
+                        <li>Look for HTTPS and a padlock icon in the address bar</li>
+                        <li>Be cautious of emails asking you to click on links</li>
+                        <li>Keep your browser and security software up to date</li>
+                        <li>Use strong, unique passwords for all accounts</li>
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="action-buttons">
+                    <a href="/" class="btn btn-primary">
+                        <span>🔍</span>
+                        <span>Scan Another URL</span>
+                    </a>
+                    <a href="#" class="btn btn-secondary">
+                        <span>📄</span>
+                        <span>Download Report</span>
+                    </a>
+                </div>
+            </div>
