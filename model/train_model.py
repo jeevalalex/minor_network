@@ -1,4 +1,4 @@
-
+# train_model.py (Updated to include network features)
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -19,7 +19,7 @@ df['status'] = LabelEncoder().fit_transform(df['status'])
 print("\nTarget distribution after encoding:")
 print(df['status'].value_counts())
 
-# Select only essential features (top 10 based on importance)
+# Select essential features + add network feature placeholders
 essential_features = [
     'length_url',              # URL length
     'length_hostname',         # Hostname length  
