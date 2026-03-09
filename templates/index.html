@@ -317,6 +317,88 @@
             white-space: nowrap;
         }
 
+        /* Metrics Dashboard Styles */
+        .metrics-section {
+            padding: 80px 60px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .metric-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+
+        .metric-value {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+        }
+
+        .metric-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 12px;
+        }
+
+        .confusion-matrix-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .confusion-matrix-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .confusion-matrix-img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
         .features-section {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -367,6 +449,14 @@
                 grid-template-columns: 1fr;
                 padding: 40px 30px;
             }
+
+            .metrics-section {
+                padding: 60px 30px;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -378,7 +468,7 @@
         </div>
         <ul class="nav-links">
             <li><a href="#">Home</a></li>
-            <li><a href="#">Features</a></li>
+            <li><a href="#metrics">Metrics</a></li>
             <li><a href="#">Documentation</a></li>
             <li><a href="#">API</a></li>
         </ul>
@@ -392,21 +482,7 @@
             </div>
             <h1>Protect Yourself from Phishing Attacks</h1>
             <p class="subtitle">Advanced machine learning technology that analyzes URLs in real-time to detect malicious websites and protect your digital identity.</p>
-            
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-number">99.8%</div>
-                    <div class="stat-label">Detection Accuracy</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">&lt;100ms</div>
-                    <div class="stat-label">Analysis Speed</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">500K+</div>
-                    <div class="stat-label">URLs Scanned</div>
-                </div>
-            </div>
+         
         </div>
 
         <div class="form-container">
@@ -439,6 +515,48 @@
         </div>
     </section>
 
+    <!-- Metrics Dashboard Section -->
+    <section id="metrics" class="metrics-section">
+        <h2 class="section-title">Model Performance Metrics</h2>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">🎯</div>
+                <div class="metric-value" id="accuracy-value">--%</div>
+                <div class="metric-label">Accuracy</div>
+                <div class="metric-description">Overall prediction correctness</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">📊</div>
+                <div class="metric-value" id="precision-value">--%</div>
+                <div class="metric-label">Precision</div>
+                <div class="metric-description">Correct phishing predictions</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">📈</div>
+                <div class="metric-value" id="recall-value">--%</div>
+                <div class="metric-label">Recall</div>
+                <div class="metric-description">Phishing detection rate</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">⚡</div>
+                <div class="metric-value" id="f1-value">--%</div>
+                <div class="metric-label">F1-Score</div>
+                <div class="metric-description">Balance of precision & recall</div>
+            </div>
+        </div>
+
+        <div class="confusion-matrix-container">
+            <h3 class="confusion-matrix-title">Confusion Matrix</h3>
+            <div id="confusion-matrix-placeholder">
+                <p style="color: rgba(255,255,255,0.5);">Loading confusion matrix...</p>
+            </div>
+        </div>
+    </section>
+
     <section class="features-section">
         <div class="feature-card">
             <div class="feature-icon">⚡</div>
@@ -456,5 +574,34 @@
             <p class="feature-desc">Your data is never stored, logged, or shared with third parties</p>
         </div>
     </section>
+
+    <script>
+        // Load metrics data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/metrics')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error loading metrics:', data.error);
+                        return;
+                    }
+                    
+                    // Update metric values
+                    document.getElementById('accuracy-value').textContent = (data.accuracy * 100).toFixed(1) + '%';
+                    document.getElementById('precision-value').textContent = (data.precision * 100).toFixed(1) + '%';
+                    document.getElementById('recall-value').textContent = (data.recall * 100).toFixed(1) + '%';
+                    document.getElementById('f1-value').textContent = (data.f1_score * 100).toFixed(1) + '%';
+                    
+                    // Update confusion matrix
+                    if (data.confusion_matrix_img) {
+                        const matrixContainer = document.getElementById('confusion-matrix-placeholder');
+                        matrixContainer.innerHTML = `<img src="data:image/png;base64,${data.confusion_matrix_img}" alt="Confusion Matrix" class="confusion-matrix-img">`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching metrics:', error);
+                });
+        });
+    </script>
 </body>
 </html>

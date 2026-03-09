@@ -6,6 +6,13 @@ from utils.feature_extractor import extract_enhanced_features, extract_basic_fea
 import os
 from urllib.parse import urlparse
 import time
+import numpy as np
+from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix
+import base64
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import io
 
 app = Flask(__name__)
 
@@ -22,6 +29,79 @@ try:
 except Exception as e:
     print(f"❌ Error loading model: {e}")
     model = None
+
+# Load test data for metrics (you'll need to store this during training)
+def load_test_data():
+    """Load test data for calculating metrics"""
+    try:
+        # You should save this during training
+        if os.path.exists('model/test_data.pkl'):
+            test_data = pickle.load(open('model/test_data.pkl', 'rb'))
+            return test_data
+    except:
+        pass
+    return None
+
+def calculate_model_metrics():
+    """Calculate comprehensive model metrics"""
+    test_data = load_test_data()
+    if test_data is None:
+        return None
+    
+    X_test, y_test = test_data['X_test'], test_data['y_test']
+    
+    # Make predictions
+    y_pred = model.predict(X_test)
+    y_pred_proba = model.predict_proba(X_test)[:, 1]
+    
+    # Calculate metrics
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+    accuracy = (y_pred == y_test).mean()
+    
+    # Create confusion matrix
+    cm = confusion_matrix(y_test, y_pred)
+    
+    # Create confusion matrix plot
+    fig, ax = plt.subplots(figsize=(8, 6))
+    im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    ax.figure.colorbar(im, ax=ax)
+    
+    # Add labels
+    classes = ['Legitimate', 'Phishing']
+    ax.set(xticks=np.arange(cm.shape[1]),
+           yticks=np.arange(cm.shape[0]),
+           xticklabels=classes, yticklabels=classes,
+           title='Confusion Matrix',
+           ylabel='True Label',
+           xlabel='Predicted Label')
+    
+    # Add text annotations
+    thresh = cm.max() / 2.
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, format(cm[i, j], 'd'),
+                   ha="center", va="center",
+                   color="white" if cm[i, j] > thresh else "black")
+    
+    # Save plot to base64 string
+    buf = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+    buf.seek(0)
+    confusion_matrix_img = base64.b64encode(buf.getvalue()).decode('utf-8')
+    plt.close()
+    
+    return {
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'f1_score': f1,
+        'confusion_matrix': cm.tolist(),
+        'confusion_matrix_img': confusion_matrix_img,
+        'support': len(y_test)
+    }
 
 def analyze_network_indicators(features):
     """Analyze network features for additional insights"""
@@ -67,7 +147,18 @@ def analyze_network_indicators(features):
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    # Calculate metrics for homepage
+    metrics = calculate_model_metrics()
+    return render_template('index.html', metrics=metrics)
+
+@app.route('/metrics')
+def metrics_api():
+    """API endpoint for model metrics"""
+    metrics = calculate_model_metrics()
+    if metrics:
+        return jsonify(metrics)
+    else:
+        return jsonify({'error': 'Metrics not available'})
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -124,6 +215,9 @@ def predict():
             
             processing_time = time.time() - start_time
             
+            # Get metrics for the result page
+            metrics = calculate_model_metrics()
+            
             return render_template('network_result.html', 
                                  url=url, 
                                  result=result,
@@ -132,6 +226,7 @@ def predict():
                                  network_indicators=network_indicators,
                                  features_used=features_used,
                                  total_features_analyzed=total_features_analyzed,
+                                 metrics=metrics,
                                  error=False)
             
         except Exception as e:
